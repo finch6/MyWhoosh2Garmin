@@ -204,7 +204,7 @@ class StravaAuth:
             f"client_id={self.settings.client_id}&"
             "response_type=code&"
             "redirect_uri=http://localhost/exchange_token&"
-               "scope=activity:read_all,profile:read_all"
+            "scope=activity:read_all,profile:read_all"
         )
         print(f"🔗 Authorize here: {auth_url}")
         redirect_url = input("🔄 Paste callback URL: ")
