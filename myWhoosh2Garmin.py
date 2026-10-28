@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +25,10 @@ file_handler = logging.FileHandler(log_file_path)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+console_handler = logging.StreamHandler()  # also show messages in the Actions run log
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 def get_ftp(client):
@@ -58,12 +61,6 @@ def build_description(json_path, name, ftp):
         logger.warning(f"Could not read Strava data from {json_path.name}: {e}")
         return None
 
-    lines = []
-    workout = re.sub(r"^\s*mywhoosh\s*[-:|–]*\s*", "", name, flags=re.IGNORECASE).strip()
-    slug = re.sub(r"[^a-z0-9]+", "-", workout.lower()).strip("-")
-    if slug:
-        lines.append(f"Details: https://mywhooshinfo.com/workouts/workout/{slug}")
-
     np_val = round(meta.get("weighted_average_watts") or 0)
     work_kj = round(meta.get("kilojoules") or 0)
     duration = meta.get("moving_time") or meta.get("elapsed_time") or 0
@@ -77,10 +74,7 @@ def build_description(json_path, name, ftp):
             metrics += [f"IF: {if_val}", f"TSS: {tss}"]
     if work_kj:
         metrics.append(f"Work: {work_kj}kJ")
-    if metrics:
-        lines.append("Metrics: " + " | ".join(metrics))
-
-    return "\n".join(lines) or None
+    return ("Metrics: " + " | ".join(metrics)) if metrics else None
 
 
 def rename_garmin_activity(start, name, description=None):
