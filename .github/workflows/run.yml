@@ -52,4 +52,12 @@ jobs:
           source .venv/bin/activate
           python myWhoosh2Garmin.py
 
-
+      - name: Save refreshed Garmin tokens
+        if: ${{ always() && hashFiles('data/garmin_tokens_updated.json') != '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.SECRETS_WRITE_TOKEN }}
+        run: |
+          gh secret set GARMIN_TOKENS --repo "${{ github.repository }}" < data/garmin_tokens_updated.json
+          rm -f data/garmin_tokens_updated.json
+          echo "GARMIN_TOKENS secret updated."

@@ -62,3 +62,4 @@ strava.db
 terraform.tfstate
 terraform.tfstate.backup
 cookie.json
+.garminconnect/

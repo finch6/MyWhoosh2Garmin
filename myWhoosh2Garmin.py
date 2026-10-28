@@ -5,12 +5,12 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import garth
-
 from fit_utils.fit_builder import MyWhooshFitBuilder
 from garmin.utils import (
     authenticate_to_garmin,
+    get_garmin,
     list_virtual_cycling_activities,
+    save_tokens_if_changed,
     upload_fit_file_to_garmin,
 )
 from strava.client import StravaClientBuilder
@@ -78,7 +78,7 @@ def rename_garmin_activity(start, name, description=None):
     for attempt in range(1, 5):
         time.sleep(2 * attempt)  # give Garmin a moment to process the upload
         try:
-            activities = garth.client.connectapi(
+            activities = get_garmin().connectapi(
                 "/activitylist-service/activities/search/activities",
                 params={"limit": 5},
             )
@@ -93,15 +93,11 @@ def rename_garmin_activity(start, name, description=None):
                 continue
             if abs((act_start - start).total_seconds()) <= 120:
                 activity_id = act["activityId"]
-                payload = {"activityId": activity_id, "activityName": name}
+                fields = {"activityName": name}
                 if description:
-                    payload["description"] = description
+                    fields["description"] = description
                 try:
-                    garth.client.connectapi(
-                        f"/activity-service/activity/{activity_id}",
-                        method="PUT",
-                        json=payload,
-                    )
+                    get_garmin().update_activity(activity_id, fields)
                     logger.info(f"Renamed Garmin activity {activity_id} to '{name}'")
                 except Exception as e:
                     logger.warning(f"Failed to rename Garmin activity {activity_id}: {e}")
@@ -152,6 +148,8 @@ def main():
             logger.info(f"Deleted file: {output_path}")
         except Exception as e:
             logger.error(f"Failed to delete file {output_path}: {e}")
+
+    save_tokens_if_changed()
 
 
 if __name__ == "__main__":
