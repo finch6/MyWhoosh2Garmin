@@ -32,6 +32,7 @@ jobs:
           STRAVA_EXPIRES_IN: ${{ secrets.STRAVA_EXPIRES_IN }}
           STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
           GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
+          ATHLETE_FTP: ${{ vars.ATHLETE_FTP }}
         run: |
           set -euo pipefail
           source .venv/bin/activate
