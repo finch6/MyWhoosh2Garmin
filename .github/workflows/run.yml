@@ -1,13 +1,27 @@
 name: Run MyWhoosh2Garmin
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      delay_seconds:
+        description: "Seconds to wait before syncing (set by the Strava webhook)"
+        required: false
+        default: "0"
+
+# Never run two syncs at once (stops duplicate uploads if two events arrive together)
+concurrency:
+  group: mywhoosh2garmin
+  cancel-in-progress: false
 
 jobs:
   run-myWhoosh2Garmin:
     name: Run MyWhoosh2Garmin
     runs-on: ubuntu-slim
     steps:
+      - name: Wait for Strava to finish processing
+        if: ${{ inputs.delay_seconds != '' && inputs.delay_seconds != '0' }}
+        run: sleep ${{ inputs.delay_seconds }}
+
       - name: Checkout repository
         uses: actions/checkout@v5
 
