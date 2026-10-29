@@ -1,5 +1,5 @@
 """
-Strava API client for downloading virtual ride activities with 'MyWhoosh' in name.
+Strava API client for downloading virtual rides recorded by MyWhoosh.
 
 Handles authentication, session management, and tracks downloaded activities in SQLite.
 """
@@ -404,9 +404,31 @@ class StravaClient:
         return [
             ActivityDetails(**activity)
             for activity in response.json()
-            if activity.get("type") == "VirtualRide"
-            and "MyWhoosh" in activity.get("name", "")
+            if activity.get("type") == "VirtualRide" and self._is_mywhoosh(activity)
         ]
+
+    def _is_mywhoosh(self, activity: dict) -> bool:
+        """True if a Strava activity came from MyWhoosh.
+
+        Checks the recording device first (shown as "MyWhoosh" on Strava), so
+        rides are picked up whatever MyWhoosh names them, e.g.
+        "Mission Stage 3: Train with Tadej Community Ride". Falls back to the
+        activity name for older rides.
+        """
+        device = activity.get("device_name")
+        if device is None:
+            # Not in the list response: fetch the activity's full details
+            try:
+                detail = self.auth.session.get(
+                    f"https://www.strava.com/api/v3/activities/{activity['id']}"
+                )
+                detail.raise_for_status()
+                device = detail.json().get("device_name")
+            except requests.RequestException as e:
+                logger.warning(f"Could not check device for {activity['id']}: {e}")
+        if device and "mywhoosh" in device.lower():
+            return True
+        return "mywhoosh" in activity.get("name", "").lower()
 
 
 class StravaClientBuilder:
