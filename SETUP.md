@@ -11,7 +11,7 @@ MyWhoosh ──▶ Strava ──webhook──▶ Cloudflare Worker ──▶ Git
 1. MyWhoosh uploads the ride to Strava.
 2. Strava notifies the Cloudflare Worker (`cloudflare/strava-webhook-worker.js`).
 3. The Worker starts the **Run MyWhoosh2Garmin** workflow (`.github/workflows/run.yml`), which waits 30 s for Strava to finish processing.
-4. `myWhoosh2Garmin.py` downloads new rides named "MyWhoosh…" from Strava, builds a FIT file, uploads it to Garmin, then sets:
+4. `myWhoosh2Garmin.py` downloads new MyWhoosh rides from Strava (Virtual Rides whose device is MyWhoosh, or with "MyWhoosh" in the name), builds a FIT file, uploads it to Garmin, then sets:
    - **Title:** the exact Strava name, e.g. `MyWhoosh - Train with Tadej: Four by Four`
    - **Notes:** `Metrics: NP: 162W | IF: 0.81 | TSS: 46.5 | Work: 367kJ`
 5. If Garmin refreshed its login token during the run, the last workflow step saves the new token back to the `GARMIN_TOKENS` secret.
@@ -266,7 +266,7 @@ Check in this order: **Cloudflare Worker → Logs** (did it fire?), then **GitHu
 | `Garmin is rate-limiting logins` | Too many attempts. Wait a few hours (ideally until the next day) before retrying. |
 | `Garmin authentication failed…` | Redo step 5 and update `GARMIN_TOKENS`. |
 | **Save refreshed Garmin tokens** step fails | `SECRETS_WRITE_TOKEN` expired or lacks *Secrets: Read and write*. Fix it, then redo step 5 (the refreshed token wasn't saved). |
-| `Found 0 new virtual cycling activities` but a ride is missing | The ride must be a Strava *Virtual Ride* with "MyWhoosh" in its name, and among your last 10 Strava activities. |
+| `Found 0 new virtual cycling activities` but a ride is missing | The ride must be a Strava *Virtual Ride* recorded by MyWhoosh (device shown on the activity), and among your last 10 Strava activities. |
 
 ## Security
 
